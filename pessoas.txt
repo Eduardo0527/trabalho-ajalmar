@@ -1,0 +1,3 @@
+1;Joao da Silva;85999991111;01/01/1990;Rua das Flores, 123
+2;Maria Oliveira;85988882222;15/05/1995;Av. Beira Mar, 500 - Apto 20
+3;Carlos Souza;85977773333;20/11/2000;Travessa Sem Saida, S/N, Centro
