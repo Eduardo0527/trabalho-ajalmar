@@ -14,6 +14,11 @@ typedef struct pessoa {
 
 Pessoa* criar_lista_pessoa();
 
-void inserir_pessoa(Pessoa** inicio, int codigo, char* nome, char* fone, char* data, char* endereco);
+Pessoa* buscar_pessoa(Pessoa* inicio, int codigo);
+
+int inserir_pessoa(Pessoa** inicio, int codigo, char* nome, char* fone, char* data, char* endereco);
+
+int alterar_pessoa(Pessoa* inicio, int codigo, char* novo_nome, char* novo_fone, char* nova_data, char* novo_endereco);
+int excluir_pessoa(Pessoa** inicio, int codigo);
 
 void carregar_pessoas_arquivo(Pessoa** inicio, char* nome_arquivo);
