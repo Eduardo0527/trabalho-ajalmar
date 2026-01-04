@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 void inicializar_fila(filaComandos *f){
     f->inicio = NULL;
@@ -38,4 +39,19 @@ int carregar_script(char *nome_arquivo, filaComandos *fila_geral){
     }
     fclose(arquivo);
     return 1;
+}
+
+void str_to_lower(char *dest, const char *src){
+    int i = 0;
+    while(src[i]){
+        dest[i] = towlower(src[i]);
+        i++;
+    }
+    dest[i] = '\0';
+}
+
+int analisar_comando(comando *cmd){
+    char temp[200];
+    str_to_lower(temp, cmd->linha_original);
+    
 }
