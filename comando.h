@@ -14,7 +14,7 @@ typedef struct {
 } comando;
 
 
-typedef struct NoComando {
+typedef struct noComando {
     comando dado;
     struct noComando *prox;
 } noComando;

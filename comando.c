@@ -15,7 +15,12 @@ void enfileirar(filaComandos *f, char* linha_lida){
         printf("Erro ao alocar memoria!\n");
         return;
     }
-    strcpy(novo->dado.linha_original, linha_lida);
+     strncpy(novo->dado.linha_original, linha_lida, 199);
+    novo->dado.linha_original[199] = '\0';
+
+    novo->dado.valido = 0;
+    novo->dado.operacao = INVALIDO;
+    novo->dado.tabela = DESCONHECIDO;
     novo->prox = NULL;
     if(f->fim == NULL){
         f->inicio = novo;
@@ -33,7 +38,7 @@ int carregar_script(char *nome_arquivo, filaComandos *fila_geral){
     }
     char buffer[200];
     while(fgets(buffer, 200, arquivo) != NULL){
-        buffer[strcspn(buffer, "\n")];
+        buffer[strcspn(buffer, "\n")] = '\0';
         if(strlen(buffer) == 0) continue;
         enfileirar(fila_geral,buffer);
     }
@@ -44,17 +49,12 @@ int carregar_script(char *nome_arquivo, filaComandos *fila_geral){
 void str_to_lower(char *dest, const char *src){
     int i = 0;
     while(src[i]){
-        dest[i] = towlower(src[i]);
+        dest[i] = tolower((unsigned char)src[i]);
         i++;
     }
     dest[i] = '\0';
 }
 
-int analisar_comando(comando *cmd){
-    char temp[200];
-    str_to_lower(temp, cmd->linha_original);
-    
-}
 
 noComando *desenfileirar_no(filaComandos *f){
     if (f->inicio == NULL) {
@@ -83,7 +83,7 @@ char* verificar_inicio(char *str, const char *prefixo) {
     str = pular_espacos(str);
     int len = strlen(prefixo);
     
-    if (_strnicmp(str, prefixo, len) == 0) {
+    if (strncasecmp(str, prefixo, len) == 0) {
         return str + len;
     }
     return NULL;
@@ -122,7 +122,10 @@ int analisar_comando_estrito(comando *cmd) {
         if (*cursor != '(') return 0;
         if (t == DESCONHECIDO) return 0; // Erro: tabela inválida ou lixo
         
-        if (strcasestr(cursor, "values") == NULL) return 0;
+        char temp[200];
+        str_to_lower(temp, cmd->linha_original);
+
+        if (strstr(temp, "values") == NULL) return 0;
 
         cmd->operacao = INSERT;
         cmd->tabela = t;
@@ -139,7 +142,10 @@ int analisar_comando_estrito(comando *cmd) {
         TabelaAlvo t = verificar_tabela(&cursor);
         if (t == DESCONHECIDO) return 0;
 
-        if (strcasestr(cursor, "where") == NULL) return 0;
+        char temp[200];
+        str_to_lower(temp, cmd->linha_original);
+
+        if (strstr(temp, "where") == NULL) return 0;
 
         cmd->operacao = DELETE;
         cmd->tabela = t;
