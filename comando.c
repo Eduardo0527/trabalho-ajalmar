@@ -203,7 +203,6 @@ void processar_validacao_fila(filaComandos *f) {
         return;
     }
 
-    // 1. Contar quantos nós existem inicialmente para saber quantas vezes rotacionar
     int total_elementos = 0;
     noComando *aux = f->inicio;
     while (aux != NULL) {
@@ -213,37 +212,28 @@ void processar_validacao_fila(filaComandos *f) {
 
     printf("Iniciando validacao de %d comandos...\n", total_elementos);
 
-    // 2. Loop de rotação
+
     int i;
     for (i = 0; i < total_elementos; i++) {
         
-        // Remove o nó da frente (usa sua função desenfileirar_no)
         noComando *no_atual = desenfileirar_no(f);
         
         if (no_atual == NULL) break; // Segurança
 
-        // Analisa a string do comando
-        // A função analisar_comando_estrito retorna 1 (Válido) ou 0 (Inválido)
-        // e já preenche os campos 'tipo' e 'tabela' dentro de no_atual->dado
         int eh_valido = analisar_comando_estrito(&no_atual->dado);
 
         if (eh_valido) {
-            // --- CASO VÁLIDO: Reinsere no final ---
             no_atual->dado.valido = 1;
             
-            // Debug visual (opcional)
-            // printf("[OK] Valido: %s\n", no_atual->dado.linha_original);
 
-            // Reinserção manual no fim da fila
-            no_atual->prox = NULL; // Importante: limpar o ponteiro prox
+            no_atual->prox = NULL;
             
             if (f->fim == NULL) {
-                // Se a fila estava vazia (pode acontecer se desenfileiramos o único)
                 f->inicio = no_atual;
             } else {
                 f->fim->prox = no_atual;
             }
-            f->fim = no_atual; // Atualiza o fim para o nó que acabou de entrar
+            f->fim = no_atual; 
 
         } else {
             // --- CASO INVÁLIDO: Joga fora ---
