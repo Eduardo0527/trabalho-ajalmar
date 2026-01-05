@@ -1,95 +1,115 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include "pessoa.h"
+#include "tipo_pet.h"
+#include "pet.h"
 
-// Função auxiliar apenas para visualizar a lista no teste
-void imprimir_lista(Pessoa* inicio) {
-    printf("\n=== ESTADO ATUAL DA LISTA ===\n");
-    Pessoa* p = inicio;
-    if (p == NULL) {
-        printf("[ Lista Vazia ]\n");
-    }
-    while (p != NULL) {
-        printf("-> ID: %d | Nome: %s | Fone: %s\n", p->codigo, p->nome, p->fone);
-        p = p->prox;
-    }
-    printf("=============================\n\n");
-}
+void listar_tudo(Pessoa* l_pes, struct tipo_de_pet* l_tipos, struct pet* l_pets) {
+    printf("\n--- PESSOAS ---\n");
+    Pessoa* p = l_pes;
+    while(p){ printf("ID: %d | Nome: %s\n", p->codigo, p->nome); p=p->prox;}
+    
+    printf("\n--- TIPOS DE PET ---\n");
+    struct tipo_de_pet* t = l_tipos;
+    while(t){ printf("ID: %d | Tipo: %s\n", t->codigo, t->nome); t=t->prox;}
 
-// Função para criar um txt fake só para o teste não falhar
-void criar_arquivo_teste() {
-    FILE* f = fopen("pessoas.txt", "w");
-    if (f) {
-        fprintf(f, "100;Carlos Arquivo;859999;01/01/1980;Rua Arquivo, 10\n");
-        fprintf(f, "101;Ana Arquivo;858888;02/02/1990;Av Arquivo, 20\n");
-        // Vou colocar um duplicado de proposito no arquivo para testar sua validação
-        fprintf(f, "100;Carlos Clone;000000;00/00/0000;Rua Fake\n");
-        fclose(f);
-        printf("Arquivo 'pessoas.txt' criado para teste.\n");
-    }
+    printf("\n--- PETS ---\n");
+    struct pet* pt = l_pets;
+    while(pt){ printf("ID: %d | Nome: %s | Dono ID: %d | Tipo ID: %d\n", pt->codigo, pt->nome, pt->codigo_pes, pt->codigo_tipo); pt=pt->prox;}
+    printf("-----------------\n");
 }
 
 int main() {
-    // 0. Preparação
-    criar_arquivo_teste();
-    Pessoa* lista = criar_lista_pessoa();
-    int resultado;
-
-    // --- TESTE 1: CARREGAR ARQUIVO ---
-    printf("--- TESTE 1: Carregando do Arquivo ---\n");
-    // Deve carregar Carlos e Ana, e avisar que o Clone é duplicado
-    carregar_pessoas_arquivo(&lista, "pessoas.txt");
-    imprimir_lista(lista);
-
-    // --- TESTE 2: INSERÇÃO MANUAL (SUCESSO) ---
-    printf("--- TESTE 2: Insercao Manual Valida ---\n");
-    resultado = inserir_pessoa(&lista, 10, "Joao Manual", "999-999", "10/10/2000", "Rua Manual");
-    if (resultado == 1) printf("Sucesso: Joao inserido.\n");
-    else printf("Falha ao inserir Joao.\n");
-
-    // --- TESTE 3: INSERÇÃO DUPLICADA (ERRO) ---
-    printf("--- TESTE 3: Validacao de Duplicidade ---\n");
-    // Tentando inserir ID 10 de novo
-    resultado = inserir_pessoa(&lista, 10, "Joao Clone", "000", "00/00", "Rua X");
-    if (resultado == -1) printf("Sucesso no Teste: O sistema bloqueou o ID duplicado.\n");
-    else printf("Falha: O sistema permitiu duplicidade!\n");
-
-    // --- TESTE 4: INSERÇÃO SEM NOME (ERRO) ---
-    printf("--- TESTE 4: Validacao de Nome Vazio ---\n");
-    resultado = inserir_pessoa(&lista, 50, "", "000", "00/00", "Rua Y");
-    if (resultado == 0) printf("Sucesso no Teste: O sistema bloqueou nome vazio.\n");
-    else printf("Falha: O sistema aceitou nome vazio!\n");
-
-    imprimir_lista(lista);
-
-    // --- TESTE 5: ALTERAÇÃO ---
-    printf("--- TESTE 5: Alteracao de Dados ---\n");
-    // Vamos mudar o nome do ID 100 (Carlos Arquivo)
-    printf("Alterando ID 100...\n");
-    resultado = alterar_pessoa(lista, 100, "Carlos ALTERADO", "000-000", "01/01/1980", "Nova Casa");
-    if (resultado == 1) printf("Alterado com sucesso.\n");
+    Pessoa* lista_pessoas = criar_lista_pessoa();
+    struct tipo_de_pet* lista_tipos = criar_lista_tipo_pet();
+    struct pet* lista_pets = criar_lista_pet();
     
-    // Tentando alterar alguém que não existe
-    printf("Tentando alterar ID 999 (Inexistente)...\n");
-    alterar_pessoa(lista, 999, "Fantasma", "000", "00", "00");
+    // Criação de arquivos de teste automáticos (se não existirem)
+    FILE* f = fopen("pessoas.txt", "a"); if(f) fclose(f);
+    f = fopen("tipos.txt", "a"); if(f) fclose(f);
+    f = fopen("pets.txt", "a"); if(f) fclose(f);
 
-    imprimir_lista(lista);
+    carregar_pessoas_arquivo(&lista_pessoas, "pessoas.txt");
+    carregar_tipos_pet_arquivo(&lista_tipos, "tipos.txt");
+    carregar_pets_arquivo(&lista_pets, "pets.txt");
 
-    // --- TESTE 6: EXCLUSÃO ---
-    printf("--- TESTE 6: Exclusao ---\n");
-    // Removendo Joao (ID 10)
-    printf("Removendo ID 10...\n");
-    if (excluir_pessoa(&lista, 10)) printf("ID 10 removido.\n");
+    int opcao = 0;
+    while (opcao != 9) {
+        printf("\n=== SISTEMA PET ===\n");
+        printf("1. Listar Tudo\n");
+        printf("2. Inserir Pessoa\n");
+        printf("3. Inserir Tipo de Pet\n");
+        printf("4. Inserir Pet (Valida Dono e Tipo)\n");
+        printf("5. Excluir Pet\n");
+        printf("6. Excluir Pessoa (Apaga os pets dela junto!)\n");
+        printf("7. Excluir Tipo (So se nao tiver pets!)\n");
+        printf("9. Sair\n");
+        printf("Escolha: ");
+        scanf("%d", &opcao);
 
-    // Removendo o primeiro da lista (teste de ponteiro inicio)
-    // Se a inserção foi no início, o último inserido (ID 100 ou 101) está na ponta
-    printf("Removendo ID 101...\n");
-    if (excluir_pessoa(&lista, 101)) printf("ID 101 removido.\n");
+        if (opcao == 1) {
+            listar_tudo(lista_pessoas, lista_tipos, lista_pets);
+        }
+        else if (opcao == 2) {
+            int id; char nome[50];
+            printf("ID: "); scanf("%d", &id);
+            printf("Nome: "); scanf(" %[^\n]", nome);
+            if(inserir_pessoa(&lista_pessoas, id, nome, "0000", "01/01/2000", "Rua") == 1)
+                printf("Sucesso.\n");
+            else printf("Erro (ID duplicado ou vazio).\n");
+        }
+        else if (opcao == 3) {
+            int id; char nome[50];
+            printf("ID Tipo: "); scanf("%d", &id);
+            printf("Descricao: "); scanf(" %[^\n]", nome);
+            if(inserir_tipo_pet(&lista_tipos, id, nome) == 1) printf("Sucesso.\n");
+            else printf("Erro.\n");
+        }
+        else if (opcao == 4) {
+            int id, id_dono, id_tipo; char nome[50];
+            printf("ID Pet: "); scanf("%d", &id);
+            printf("ID Dono: "); scanf("%d", &id_dono);
+            printf("ID Tipo: "); scanf("%d", &id_tipo);
+            printf("Nome Pet: "); scanf(" %[^\n]", nome);
 
-    imprimir_lista(lista);
-
-    // Limpeza final (opcional para o teste, mas boa prática)
-    // Aqui você faria um loop de free, mas o SO limpa ao fechar.
-    
+            if (buscar_pessoa(lista_pessoas, id_dono) == NULL) 
+                printf("[ERRO] Dono nao encontrado.\n");
+            else if (buscar_tipo_pet(lista_tipos, id_tipo) == NULL) 
+                printf("[ERRO] Tipo nao encontrado.\n");
+            else {
+                if(inserir_pet(&lista_pets, id, id_dono, nome, id_tipo) == 1) printf("Sucesso.\n");
+                else printf("Erro (ID duplicado).\n");
+            }
+        }
+        else if (opcao == 5) {
+            int id;
+            printf("ID Pet: "); scanf("%d", &id);
+            if(excluir_pet(&lista_pets, id)) printf("Pet removido.\n");
+            else printf("Pet nao encontrado.\n");
+        }
+        else if (opcao == 6) {
+            int id;
+            printf("ID Pessoa: "); scanf("%d", &id);
+            // 1. Cascata: Remove pets
+            int pets_removidos = excluir_pets_por_dono(&lista_pets, id);
+            // 2. Remove pessoa
+            if(excluir_pessoa(&lista_pessoas, id)) 
+                printf("Pessoa e seus %d pets foram removidos.\n", pets_removidos);
+            else printf("Pessoa nao encontrada.\n");
+        }
+        else if (opcao == 7) {
+            int id;
+            printf("ID Tipo: "); scanf("%d", &id);
+            // 1. Validacao: Bloqueia se tiver pets
+            if(tipo_tem_pets(lista_pets, id)) {
+                printf("[BLOQUEADO] Existem pets desse tipo. Remova-os antes.\n");
+            } else {
+                if(excluir_tipo_pet(&lista_tipos, id)) printf("Tipo removido.\n");
+                else printf("Tipo nao encontrado.\n");
+            }
+        }
+    }
     return 0;
 }
