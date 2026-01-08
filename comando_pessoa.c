@@ -54,11 +54,13 @@ void executar_fila_pessoas(filaComandos *f_pessoas, Pessoa** lista_pessoa) {
                 // O espaço no formato do sscanf ignora espaços reais múltiplos
                 if (sscanf(ptr_where, "where codigo = %d", &codigo) == 1) {
                     printf(" -> Removendo Pessoa Codigo: %d\n", codigo);
+                    excluir_pessoa(lista_pessoa, codigo);
                     // remover_pessoa(codigo);
                 } 
                 // Tratamento para "where codigo=3" (sem espaços)
                 else if (sscanf(ptr_where, "where codigo=%d", &codigo) == 1) {
                      printf(" -> Removendo Pessoa Codigo: %d\n", codigo);
+                     excluir_pessoa(lista_pessoa, codigo);
                      // remover_pessoa(codigo);
                 }
             }
@@ -69,7 +71,8 @@ void executar_fila_pessoas(filaComandos *f_pessoas, Pessoa** lista_pessoa) {
             // O PDF [cite: 36] exige tratamento especial para ORDER BY
             if (strstr(linha, "order by nome")) {
                 printf(" -> Listando Pessoas (Ordenado por Arvore Binaria)\n");
-                // listar_pessoas_arvore();
+                //Função da árvore
+                exibir_pessoas_ordenado_por_nome(*lista_pessoa);
             } else {
                 // Pode ser um select * simples ou com where
                 char *ptr_where = strstr(linha, "where");

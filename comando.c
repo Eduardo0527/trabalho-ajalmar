@@ -72,6 +72,39 @@ noComando *desenfileirar_no(filaComandos *f){
     return no_removido;
 }
 
+int minha_strncasecmp(const char *s1, const char *s2, size_t n) {
+    while (n > 0) {
+        unsigned char c1 = (unsigned char)tolower((unsigned char)*s1);
+        unsigned char c2 = (unsigned char)tolower((unsigned char)*s2);
+
+        if (c1 != c2) return c1 - c2;
+        if (c1 == '\0') return 0; // Chegou ao fim de ambas
+
+        s1++;
+        s2++;
+        n--;
+    }
+    return 0; // Iguais até n caracteres
+}
+
+// Verifica se a string começa com o prefixo e avança o ponteiro
+char* verificar_inicio(char *str, const char *prefixo) {
+    str = pular_espacos(str);
+    int len = strlen(prefixo);
+    
+    // Usa nossa função manual em vez da função de biblioteca
+    if (minha_strncasecmp(str, prefixo, len) == 0) {
+        // Verifica se o caractere seguinte é um separador válido ou fim de string
+        // Isso evita que "insertt" seja aceito como "insert"
+        char prox = str[len];
+        if (prox == '\0' || isspace((unsigned char)prox) || 
+            prox == '(' || prox == ')' || prox == ',' || prox == ';' || prox == '*') {
+            return str + len;
+        }
+    }
+    return NULL;
+}
+
 char* pular_espacos(char *str) {
     while (*str && isspace((unsigned char)*str)) {
         str++;
@@ -79,15 +112,6 @@ char* pular_espacos(char *str) {
     return str;
 }
 
-char* verificar_inicio(char *str, const char *prefixo) {
-    str = pular_espacos(str);
-    int len = strlen(prefixo);
-    
-    if (strncasecmp(str, prefixo, len) == 0) {
-        return str + len;
-    }
-    return NULL;
-}
 
 int verificar_tabela(char **cursor) {
     *cursor = pular_espacos(*cursor);
@@ -107,10 +131,39 @@ int verificar_tabela(char **cursor) {
     return DESCONHECIDO;
 }
 
+// Tenta casar o cursor com qualquer campo válido para a tabela especificada.
+// Retorna o ponteiro avançado se achar um campo válido.
+// Retorna NULL se o que estiver lá não for um campo da tabela.
+char* verificar_qualquer_campo(char *cursor, TabelaAlvo t) {
+    char *p;
+
+    // Campos comuns ou específicos
+    if ((p = verificar_inicio(cursor, "codigo"))) return p; // Todas tem codigo
+
+    if (t == PESSOA) {
+        if ((p = verificar_inicio(cursor, "nome"))) return p;
+        if ((p = verificar_inicio(cursor, "fone"))) return p;
+        if ((p = verificar_inicio(cursor, "endereco"))) return p;
+        if ((p = verificar_inicio(cursor, "data_nascimento"))) return p;
+    }
+    else if (t == PET) {
+        if ((p = verificar_inicio(cursor, "nome"))) return p;
+        if ((p = verificar_inicio(cursor, "codigo_pes"))) return p; // Campo do dono
+        if ((p = verificar_inicio(cursor, "codigo_tipo"))) return p;
+    }
+    else if (t == TIPO_PET) {
+        if ((p = verificar_inicio(cursor, "descricao"))) return p;
+    }
+
+    return NULL; // Não é nenhum campo conhecido
+}
+
 int analisar_comando_estrito(comando *cmd) {
     char *cursor = cmd->linha_original;
-    
-    char *temp = verificar_inicio(cursor, "insert");
+    char *temp;
+
+    // --- INSERT ---
+    temp = verificar_inicio(cursor, "insert");
     if (temp) {
         cursor = temp;
         
@@ -118,20 +171,27 @@ int analisar_comando_estrito(comando *cmd) {
         if (!cursor) return 0;
         
         TabelaAlvo t = verificar_tabela(&cursor);
+        if (t == DESCONHECIDO) return 0;
+        
         cursor = pular_espacos(cursor);
         if (*cursor != '(') return 0;
-        if (t == DESCONHECIDO) return 0; // Erro: tabela inválida ou lixo
         
-        char temp[200];
-        str_to_lower(temp, cmd->linha_original);
-
-        if (strstr(temp, "values") == NULL) return 0;
+        // Pula os campos entre parênteses
+        while (*cursor != '\0' && *cursor != ')') {
+            cursor++;
+        }
+        if (*cursor != ')') return 0; 
+        cursor++; 
+        
+        cursor = verificar_inicio(cursor, "values");
+        if (!cursor) return 0;
 
         cmd->operacao = INSERT;
         cmd->tabela = t;
         return 1;
     }
 
+    // --- DELETE ---
     temp = verificar_inicio(cmd->linha_original, "delete"); 
     if (temp) {
         cursor = temp;
@@ -142,37 +202,61 @@ int analisar_comando_estrito(comando *cmd) {
         TabelaAlvo t = verificar_tabela(&cursor);
         if (t == DESCONHECIDO) return 0;
 
-        char temp[200];
-        str_to_lower(temp, cmd->linha_original);
+        cursor = verificar_inicio(cursor, "where");
+        if (!cursor) return 0;
 
-        if (strstr(temp, "where") == NULL) return 0;
+        // --- CORREÇÃO AQUI ---
+        // Antes o código parava aqui. Agora verificamos se o próximo token
+        // é "codigo". Se tiver "dfdfdf codigo", o verificar_inicio retorna NULL.
+        if (verificar_qualquer_campo(cursor, t) == NULL) return 0;
 
         cmd->operacao = DELETE;
         cmd->tabela = t;
         return 1;
     }
+
+    // --- SELECT ---
     temp = verificar_inicio(cmd->linha_original, "select");
     if (temp) {
         cursor = temp;
         
         cursor = pular_espacos(cursor);
-        if (*cursor != '*') {
-            return 0; 
-        }
-        cursor++;
+        if (*cursor != '*') return 0; 
+        cursor++; 
 
         cursor = verificar_inicio(cursor, "from");
-        if (!cursor) return 0; // Select sem from
+        if (!cursor) return 0; 
 
         TabelaAlvo t = verificar_tabela(&cursor);
-        if (t == DESCONHECIDO) return 0; // Tabela inválida
+        if (t == DESCONHECIDO) return 0; 
 
         cursor = pular_espacos(cursor);
+        
+        // Se a string não acabou (não é \0 nem ;), tem que ter validação estrita
         if (*cursor != '\0' && *cursor != ';') {
-            // Se tem mais texto, deve começar com 'where' ou 'order'
-            if (verificar_inicio(cursor, "where") == NULL && 
-                verificar_inicio(cursor, "order") == NULL) {
-                return 0; // Tem lixo após o nome da tabela
+            
+            // Caso 1: Verifica se é WHERE
+            char *temp_where = verificar_inicio(cursor, "where");
+            if (temp_where) {
+                // Se achou WHERE, o próximo tem que ser um campo válido
+                // (Aceita "where nome", "where fone", "where codigo"...)
+                if (verificar_qualquer_campo(temp_where, t) == NULL) return 0;
+            }
+            // Caso 2: Verifica se é ORDER
+            else {
+                char *temp_order = verificar_inicio(cursor, "order");
+                if (temp_order) {
+                    // Se achou ORDER, o próximo TEM que ser "by"
+                    char *temp_by = verificar_inicio(temp_order, "by");
+                    if (!temp_by) return 0;
+                    
+                    // E depois do BY, TEM que ser "nome" (conforme PDF)
+                    if (verificar_inicio(temp_by, "nome") == NULL) return 0;
+                } 
+                else {
+                    // Se não é nem WHERE nem ORDER, e tem texto, é LIXO
+                    return 0; 
+                }
             }
         }
 
@@ -181,15 +265,25 @@ int analisar_comando_estrito(comando *cmd) {
         return 1;
     }
 
+    // --- UPDATE ---
     temp = verificar_inicio(cmd->linha_original, "update");
     if (temp) {
         cursor = temp;
+        
         TabelaAlvo t = verificar_tabela(&cursor);
         if (t == DESCONHECIDO) return 0;
 
-        // 2. Verifica 'set'
         cursor = verificar_inicio(cursor, "set");
         if (!cursor) return 0; 
+
+        // --- CORREÇÃO AQUI ---
+        // O Update não pode acabar no "set". Tem que ter algum campo depois.
+        // Como os campos variam (nome, fone, etc), verificamos apenas se NÃO chegamos ao fim.
+        cursor = pular_espacos(cursor);
+        if (*cursor == '\0' || *cursor == ';') return 0; // "update ... set;" é inválido
+        
+        // Opcional: Para ser ultra estrito, você teria que verificar se o próximo 
+        // comando é um nome de coluna válido, mas só verificar se não é vazio já ajuda.
 
         cmd->operacao = UPDATE;
         cmd->tabela = t;
