@@ -252,3 +252,44 @@ void processar_validacao_fila(filaComandos *f) {
     
     printf("Validacao concluida.\n");
 }
+
+void enfileirar_no_existente(filaComandos *f, noComando *no) {
+    no->prox = NULL;
+
+    if (f->inicio == NULL) {
+        f->inicio = no;
+    } else {
+        f->fim->prox = no;
+    }
+    f->fim = no;
+}
+
+void distribuir_comandos(filaComandos *f_geral, filaComandos *f_pessoa, filaComandos *f_pet, filaComandos *f_tipo) {
+    printf("Distribuindo comandos para filas especificas...\n");
+
+    while (f_geral->inicio != NULL) {
+        
+        noComando *no_atual = desenfileirar_no(f_geral);
+        
+        switch (no_atual->dado.tabela) {
+            case PESSOA:
+                enfileirar_no_existente(f_pessoa, no_atual);
+                break;
+                
+            case PET:
+                enfileirar_no_existente(f_pet, no_atual);
+                break;
+                
+            case TIPO_PET:
+                enfileirar_no_existente(f_tipo, no_atual);
+                break;
+                
+            default:
+                printf("Erro: Comando orfao encontrado (Tabela %d). Descartando.\n", no_atual->dado.tabela);
+                free(no_atual);
+                break;
+        }
+    }
+    
+    printf("Distribuicao concluida.\n");
+}

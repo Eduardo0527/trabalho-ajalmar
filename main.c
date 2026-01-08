@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "tipo_pet.h"
 #include "pet.h"
-#include "arvore_pessoa.h"
+#include "comando_pessoa.h"
 
 void listar_tudo(Pessoa* l_pes, struct tipo_de_pet* l_tipos, struct pet* l_pets) {
     printf("\n--- PESSOAS ---\n");
@@ -27,14 +26,25 @@ int main() {
     struct pet* lista_pets = criar_lista_pet();
     
     // Criação de arquivos de teste automáticos (se não existirem)
-    FILE* f = fopen("pessoas.txt", "a"); if(f) fclose(f);
-    f = fopen("tipos.txt", "a"); if(f) fclose(f);
-    f = fopen("pets.txt", "a"); if(f) fclose(f);
+    FILE* file = fopen("pessoas.txt", "a"); if(file) fclose(file);
+    file = fopen("tipos.txt", "a"); if(file) fclose(file);
+    file = fopen("pets.txt", "a"); if(file) fclose(file);
 
     carregar_pessoas_arquivo(&lista_pessoas, "pessoas.txt");
     carregar_tipos_pet_arquivo(&lista_tipos, "tipos.txt");
     carregar_pets_arquivo(&lista_pets, "pets.txt");
-    Pessoa* aux = lista_pessoas;
-    exibir_pessoas_ordenado_por_nome(lista_pessoas);
+    filaComandos f;
+    filaComandos f_pessoa;
+    filaComandos f_pet;
+    filaComandos f_tipo;
+    inicializar_fila(&f);
+    inicializar_fila(&f_pessoa);
+    inicializar_fila(&f_pet);
+    inicializar_fila(&f_tipo);
+    carregar_script("arquivo.txt", &f);
+    processar_validacao_fila(&f);
+    distribuir_comandos(&f,&f_pessoa,&f_pet,&f_tipo);
+    executar_fila_pessoas(&f_pessoa, &lista_pessoas);
+    
     return 0;
 }

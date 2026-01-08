@@ -55,6 +55,7 @@ int inserir_pessoa(Pessoa** inicio, int codigo, char* nome, char* fone, char* da
         (*inicio)->ant = novo;
     }
     *inicio = novo; 
+    printf("%s Inserido", nome);
 
     return 1; 
 }

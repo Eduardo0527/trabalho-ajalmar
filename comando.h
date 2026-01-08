@@ -34,3 +34,5 @@ int verificar_tabela(char **cursor);
 int analisar_comando_estrito(comando *cmd);
 noComando *desenfileirar_no(filaComandos *f);
 void processar_validacao_fila(filaComandos *f);
+void enfileirar_no_existente(filaComandos *f, noComando *no);
+void distribuir_comandos(filaComandos *f_geral, filaComandos *f_pessoa, filaComandos *f_pet, filaComandos *f_tipo);
