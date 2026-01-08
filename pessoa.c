@@ -150,3 +150,42 @@ int excluir_pessoa(Pessoa** inicio, int codigo) {
 
     return 1; 
 }
+
+void salvar_pessoas_arquivo(Pessoa* inicio, char* nome_arquivo) {
+    FILE* arq = fopen(nome_arquivo, "w");
+    
+    if (arq == NULL) {
+        printf("[ERRO] Nao foi possivel abrir o arquivo para salvar.\n");
+        return;
+    }
+
+    Pessoa* atual = inicio;
+    
+    while (atual != NULL) {
+        fprintf(arq, "%d;%s;%s;%s;%s\n", 
+                atual->codigo, 
+                atual->nome, 
+                atual->fone, 
+                atual->data_nascimento, 
+                atual->endereco);
+        
+        atual = atual->prox;
+    }
+
+    fclose(arq);
+}
+
+void listar_todas_pessoas(Pessoa* inicio) {
+    if (inicio == NULL) {
+        printf("Nenhuma pessoa cadastrada.\n");
+        return;
+    }
+
+    Pessoa* p = inicio;
+    printf("\n--- RELATORIO DE PESSOAS ---\n");
+    while (p != NULL) {
+        printf("ID: %-4d | Nome: %-20s | Fone: %s\n", p->codigo, p->nome, p->fone);
+        p = p->prox;
+    }
+    printf("----------------------------\n");
+}

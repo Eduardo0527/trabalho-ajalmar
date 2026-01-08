@@ -85,3 +85,66 @@ int tipo_tem_pets(struct pet* inicio, int codigo_tipo) {
     }
     return 0;
 }
+
+int alterar_pet(struct pet* inicio, int codigo, char* novo_nome, int novo_dono_id) {
+    struct pet* atual = buscar_pet(inicio, codigo);
+
+    if (atual == NULL) {
+        printf("[ERRO] Pet %d nao encontrado para alteracao.\n", codigo);
+        return 0;
+    }
+
+    // Alterar Nome
+    if (novo_nome != NULL && strlen(novo_nome) > 0) {
+        // Libera o nome antigo para não vazar memória
+        free(atual->nome);
+        // Aloca e copia o novo (use strdup se disponível, ou malloc+strcpy)
+        atual->nome = (char*) malloc(strlen(novo_nome) + 1);
+        strcpy(atual->nome, novo_nome);
+    }
+
+    // Alterar Dono (Ex: Adoção ou correção)
+    if (novo_dono_id != -1) {
+        atual->codigo_pes = novo_dono_id;
+    }
+
+    return 1;
+}
+
+// --- FUNÇÃO DE SALVAR (PERSISTÊNCIA) ---
+void salvar_pets_arquivo(struct pet* inicio, char* nome_arquivo) {
+    FILE* arq = fopen(nome_arquivo, "w"); // "w" apaga o anterior e escreve o novo
+    
+    if (arq == NULL) {
+        printf("[ERRO CRITICO] Nao foi possivel salvar em %s\n", nome_arquivo);
+        return;
+    }
+
+    struct pet* atual = inicio;
+    while (atual != NULL) {
+        // Formato: CODIGO;COD_DONO;NOME;COD_TIPO
+        fprintf(arq, "%d;%d;%s;%d\n", 
+                atual->codigo, 
+                atual->codigo_pes, 
+                atual->nome, 
+                atual->codigo_tipo);
+        
+        atual = atual->prox;
+    }
+
+    fclose(arq);
+    // printf("Dados dos pets salvos com sucesso.\n");
+}
+
+void listar_todos_pets(struct pet* inicio) {
+    if (inicio == NULL) {
+        printf("Nenhum pet cadastrado.\n");
+        return;
+    }
+    struct pet* p = inicio;
+    while (p != NULL) {
+        printf("ID: %-4d | Nome: %-15s | Dono ID: %-4d | Tipo ID: %d\n", 
+               p->codigo, p->nome, p->codigo_pes, p->codigo_tipo);
+        p = p->prox;
+    }
+}

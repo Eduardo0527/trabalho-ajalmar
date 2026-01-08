@@ -8,10 +8,17 @@ struct tipo_de_pet {
     struct tipo_de_pet* ant;
 };
 
+// Funções Básicas
 struct tipo_de_pet* criar_lista_tipo_pet();
 struct tipo_de_pet* buscar_tipo_pet(struct tipo_de_pet* inicio, int codigo);
 int inserir_tipo_pet(struct tipo_de_pet** inicio, int codigo, char* nome);
+
+// Funções de Arquivo e Manutenção
 void carregar_tipos_pet_arquivo(struct tipo_de_pet** inicio, char* nome_arquivo);
+void salvar_tipos_pet_arquivo(struct tipo_de_pet* inicio, char* nome_arquivo);
+
 int excluir_tipo_pet(struct tipo_de_pet** inicio, int codigo);
+int alterar_tipo_pet(struct tipo_de_pet* inicio, int codigo, char* novo_nome);
+void listar_todos_tipos(struct tipo_de_pet* inicio);
 
 #endif

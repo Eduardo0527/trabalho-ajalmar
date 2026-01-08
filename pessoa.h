@@ -22,3 +22,7 @@ int alterar_pessoa(Pessoa* inicio, int codigo, char* novo_nome, char* novo_fone,
 int excluir_pessoa(Pessoa** inicio, int codigo);
 
 void carregar_pessoas_arquivo(Pessoa** inicio, char* nome_arquivo);
+
+void salvar_pessoas_arquivo(Pessoa* inicio, char* nome_arquivo);
+
+void listar_todas_pessoas(Pessoa* inicio);
