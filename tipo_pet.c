@@ -57,7 +57,7 @@ int excluir_tipo_pet(struct tipo_de_pet** inicio, int codigo) {
     return 1;
 }
 
-// --- FUNÇÃO DE ALTERAR (UPDATE) ---
+// FUNÇÃO DE ALTERAR
 int alterar_tipo_pet(struct tipo_de_pet* inicio, int codigo, char* nova_descricao) {
     // 1. Busca
     struct tipo_de_pet* atual = buscar_tipo_pet(inicio, codigo); // Supondo que exista essa função
@@ -69,20 +69,13 @@ int alterar_tipo_pet(struct tipo_de_pet* inicio, int codigo, char* nova_descrica
 
     // 2. Altera (apenas se não for nulo)
     if (nova_descricao != NULL && strlen(nova_descricao) > 0) {
-        // Libera memória antiga se for alocação dinâmica
-        // free(atual->descricao); 
-        
-        // Se for string estática (char descricao[100]):
         strcpy(atual->nome, nova_descricao);
-        
-        // Se for ponteiro (char* descricao):
-        // atual->descricao = strdup(nova_descricao);
     }
     
     return 1;
 }
 
-// --- FUNÇÃO DE SALVAR (PERSISTÊNCIA) ---
+// FUNÇÃO DE SALVAR
 void salvar_tipos_pet_arquivo(struct tipo_de_pet* inicio, char* nome_arquivo) {
     FILE* arq = fopen(nome_arquivo, "w");
     if (arq == NULL) {
@@ -92,7 +85,6 @@ void salvar_tipos_pet_arquivo(struct tipo_de_pet* inicio, char* nome_arquivo) {
 
     struct tipo_de_pet* p = inicio;
     while (p != NULL) {
-        // Formato: CODIGO;NOME
         fprintf(arq, "%d;%s\n", p->codigo, p->nome);
         p = p->prox;
     }
@@ -111,7 +103,7 @@ void listar_tipo_pet(struct tipo_de_pet* inicio, int codigo) {
     }
 }
 
-// --- FUNÇÃO AUXILIAR DE LISTAGEM ---
+// FUNÇÃO DE LISTAGEM
 void listar_todos_tipos(struct tipo_de_pet* inicio) {
     if (inicio == NULL) {
         printf("Nenhum tipo cadastrado.\n");

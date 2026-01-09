@@ -78,24 +78,21 @@ int minha_strncasecmp(const char *s1, const char *s2, size_t n) {
         unsigned char c2 = (unsigned char)tolower((unsigned char)*s2);
 
         if (c1 != c2) return c1 - c2;
-        if (c1 == '\0') return 0; // Chegou ao fim de ambas
+        if (c1 == '\0') return 0;
 
         s1++;
         s2++;
         n--;
     }
-    return 0; // Iguais até n caracteres
+    return 0;
 }
 
 // Verifica se a string começa com o prefixo e avança o ponteiro
 char* verificar_inicio(char *str, const char *prefixo) {
     str = pular_espacos(str);
     int len = strlen(prefixo);
-    
-    // Usa nossa função manual em vez da função de biblioteca
+
     if (minha_strncasecmp(str, prefixo, len) == 0) {
-        // Verifica se o caractere seguinte é um separador válido ou fim de string
-        // Isso evita que "insertt" seja aceito como "insert"
         char prox = str[len];
         if (prox == '\0' || isspace((unsigned char)prox) || 
             prox == '(' || prox == ')' || prox == ',' || prox == ';' || prox == '*') {
@@ -137,7 +134,6 @@ int verificar_tabela(char **cursor) {
 char* verificar_qualquer_campo(char *cursor, TabelaAlvo t) {
     char *p;
 
-    // Campos comuns ou específicos
     if ((p = verificar_inicio(cursor, "codigo"))) return p; // Todas tem codigo
 
     if (t == PESSOA) {
@@ -155,14 +151,14 @@ char* verificar_qualquer_campo(char *cursor, TabelaAlvo t) {
         if ((p = verificar_inicio(cursor, "descricao"))) return p;
     }
 
-    return NULL; // Não é nenhum campo conhecido
+    return NULL;
 }
 
 int analisar_comando_estrito(comando *cmd) {
     char *cursor = cmd->linha_original;
     char *temp;
 
-    // --- INSERT ---
+    // INSERT
     temp = verificar_inicio(cursor, "insert");
     if (temp) {
         cursor = temp;
@@ -176,7 +172,6 @@ int analisar_comando_estrito(comando *cmd) {
         cursor = pular_espacos(cursor);
         if (*cursor != '(') return 0;
         
-        // Pula os campos entre parênteses
         while (*cursor != '\0' && *cursor != ')') {
             cursor++;
         }
@@ -191,7 +186,7 @@ int analisar_comando_estrito(comando *cmd) {
         return 1;
     }
 
-    // --- DELETE ---
+    // DELETE
     temp = verificar_inicio(cmd->linha_original, "delete"); 
     if (temp) {
         cursor = temp;
@@ -204,10 +199,6 @@ int analisar_comando_estrito(comando *cmd) {
 
         cursor = verificar_inicio(cursor, "where");
         if (!cursor) return 0;
-
-        // --- CORREÇÃO AQUI ---
-        // Antes o código parava aqui. Agora verificamos se o próximo token
-        // é "codigo". Se tiver "dfdfdf codigo", o verificar_inicio retorna NULL.
         if (verificar_qualquer_campo(cursor, t) == NULL) return 0;
 
         cmd->operacao = DELETE;
@@ -215,7 +206,7 @@ int analisar_comando_estrito(comando *cmd) {
         return 1;
     }
 
-    // --- SELECT ---
+    // SELECT
     temp = verificar_inicio(cmd->linha_original, "select");
     if (temp) {
         cursor = temp;
@@ -232,14 +223,12 @@ int analisar_comando_estrito(comando *cmd) {
 
         cursor = pular_espacos(cursor);
         
-        // Se a string não acabou (não é \0 nem ;), tem que ter validação estrita
         if (*cursor != '\0' && *cursor != ';') {
             
             // Caso 1: Verifica se é WHERE
             char *temp_where = verificar_inicio(cursor, "where");
             if (temp_where) {
                 // Se achou WHERE, o próximo tem que ser um campo válido
-                // (Aceita "where nome", "where fone", "where codigo"...)
                 if (verificar_qualquer_campo(temp_where, t) == NULL) return 0;
             }
             // Caso 2: Verifica se é ORDER
@@ -250,11 +239,9 @@ int analisar_comando_estrito(comando *cmd) {
                     char *temp_by = verificar_inicio(temp_order, "by");
                     if (!temp_by) return 0;
                     
-                    // E depois do BY, TEM que ser "nome" (conforme PDF)
                     if (verificar_inicio(temp_by, "nome") == NULL) return 0;
                 } 
                 else {
-                    // Se não é nem WHERE nem ORDER, e tem texto, é LIXO
                     return 0; 
                 }
             }
@@ -265,7 +252,7 @@ int analisar_comando_estrito(comando *cmd) {
         return 1;
     }
 
-    // --- UPDATE ---
+    // UPDATE
     temp = verificar_inicio(cmd->linha_original, "update");
     if (temp) {
         cursor = temp;
@@ -276,15 +263,9 @@ int analisar_comando_estrito(comando *cmd) {
         cursor = verificar_inicio(cursor, "set");
         if (!cursor) return 0; 
 
-        // --- CORREÇÃO AQUI ---
-        // O Update não pode acabar no "set". Tem que ter algum campo depois.
-        // Como os campos variam (nome, fone, etc), verificamos apenas se NÃO chegamos ao fim.
         cursor = pular_espacos(cursor);
         if (*cursor == '\0' || *cursor == ';') return 0; // "update ... set;" é inválido
         
-        // Opcional: Para ser ultra estrito, você teria que verificar se o próximo 
-        // comando é um nome de coluna válido, mas só verificar se não é vazio já ajuda.
-
         cmd->operacao = UPDATE;
         cmd->tabela = t;
         return 1;
@@ -293,10 +274,6 @@ int analisar_comando_estrito(comando *cmd) {
     return 0; 
 }
 
-/* * Função: processar_validacao_fila
- * Objetivo: Percorre a fila bruta, valida cada comando e mantém apenas os válidos.
- * Lógica: Retira do início -> Valida -> Se bom, põe no fim. Se ruim, free().
- */
 void processar_validacao_fila(filaComandos *f) {
     if (f->inicio == NULL) {
         printf("A fila esta vazia. Nada a processar.\n");
@@ -318,7 +295,7 @@ void processar_validacao_fila(filaComandos *f) {
         
         noComando *no_atual = desenfileirar_no(f);
         
-        if (no_atual == NULL) break; // Segurança
+        if (no_atual == NULL) break;
 
         int eh_valido = analisar_comando_estrito(&no_atual->dado);
 
@@ -336,10 +313,7 @@ void processar_validacao_fila(filaComandos *f) {
             f->fim = no_atual; 
 
         } else {
-            // --- CASO INVÁLIDO: Joga fora ---
             printf("[ERRO] Comando invalido removido: %s\n", no_atual->dado.linha_original);
-            
-            // Libera a memória do nó, pois ele não serve mais
             free(no_atual);
         }
     }

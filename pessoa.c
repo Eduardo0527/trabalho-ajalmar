@@ -56,13 +56,12 @@ int inserir_pessoa(Pessoa** inicio, int codigo, char* nome, char* fone, char* da
     // 4. Atribuição de valores com tratamento de NULL
     novo->codigo = codigo;
     
-    // Usamos a lógica: se for NULL, salva como "" (string vazia)
+    // Se for NULL, salva como ""
     novo->nome = alocar_string_segura(nome);
     novo->fone = alocar_string_segura(fone);
     novo->data_nascimento = alocar_string_segura(data);
     novo->endereco = alocar_string_segura(endereco);
 
-    // 5. Ajuste dos ponteiros da lista duplamente encadeada
     novo->prox = *inicio; 
     novo->ant = NULL;
 
@@ -84,22 +83,16 @@ void carregar_pessoas_arquivo(Pessoa** inicio, char* nome_arquivo) {
 
     char linha[500];
     while (fgets(linha, sizeof(linha), arq)) {
-        // Remove o \n do final da linha
         linha[strcspn(linha, "\n")] = '\0';
 
-        // Se a linha estiver vazia, pula
         if (strlen(linha) < 2) continue;
 
         int cod;
         char *n, *f, *d, *e;
-
-        // strtok divide a string baseada no delimitador ";"
         char *token = strtok(linha, ";");
         if (token == NULL) continue;
         cod = atoi(token);
 
-        // Função auxiliar para pegar o próximo campo ou retornar vazio ""
-        // IMPORTANTE: strtok(NULL, ";") continua de onde parou
         token = strtok(NULL, ";");
         n = token ? token : "";
 
@@ -127,12 +120,12 @@ int alterar_pessoa(Pessoa* inicio, int codigo, char* novo_nome, char* novo_fone,
 
     if (atual == NULL) {
         printf("[ERRO] Pessoa %d nao encontrada para alteracao.\n", codigo);
-        return 0; // Falha
+        return 0;
     }
     
     // 2. Atualiza NOME (Se foi passado no comando UPDATE)
     if (novo_nome != NULL && strlen(novo_nome) > 0) {
-        if (atual->nome != NULL) free(atual->nome); // Evita vazamento de memória
+        if (atual->nome != NULL) free(atual->nome);
         
         atual->nome = (char*) malloc(strlen(novo_nome) + 1);
         if (atual->nome != NULL) {
@@ -170,7 +163,7 @@ int alterar_pessoa(Pessoa* inicio, int codigo, char* novo_nome, char* novo_fone,
         }
     }
 
-    return 1; // Sucesso
+    return 1;
 }
 
 // Retorna: 1 (Sucesso), 0 (Pessoa não encontrada)
@@ -183,14 +176,13 @@ int excluir_pessoa(Pessoa** inicio, int codigo, struct pet** lista_pets) {
         return 0;
     }
 
-    // [NOVO] Exclusão em Cascata
     // Removemos todos os pets vinculados a este código de pessoa
     int pets_removidos = excluir_pets_por_dono(lista_pets, codigo);
     if (pets_removidos > 0) {
         printf("[AVISO] %d pet(s) do dono %d foram removidos em cascata.\n", pets_removidos, codigo);
     }
 
-    // Prossegue com a exclusão da pessoa da lista
+    // Exclusão da pessoa da lista
     if (atual->ant != NULL) {
         atual->ant->prox = atual->prox;
     } else {
@@ -217,18 +209,12 @@ void salvar_pessoas_arquivo(Pessoa* inicio, char* nome_arquivo) {
 
     Pessoa* atual = inicio;
     while (atual != NULL) {
-        // 1. Garantimos que o ID seja impresso
+
         fprintf(arq, "%d", atual->codigo);
-        
-        // 2. Para cada string, verificamos se é NULL. 
-        // Se for NULL ou vazia, imprimimos apenas o delimitador ;
         fprintf(arq, ";%s", atual->nome ? atual->nome : "");
         fprintf(arq, ";%s", atual->fone ? atual->fone : "");
         fprintf(arq, ";%s", atual->data_nascimento ? atual->data_nascimento : "");
         fprintf(arq, ";%s", atual->endereco ? atual->endereco : "");
-        
-        // 3. O PONTO MAIS IMPORTANTE: Forçar a quebra de linha manual
-        // e garantir que o buffer seja descarregado
         fprintf(arq, "\n");
         
         atual = atual->prox;

@@ -1,4 +1,4 @@
-#include "comando_tipo.h" // Header com a struct TipoPet
+#include "comando_tipo.h"
 
 
 
@@ -9,23 +9,19 @@ void executar_fila_tipos(filaComandos *f_tipos, struct tipo_de_pet** lista_tipo)
         noComando *no = desenfileirar_no(f_tipos);
         char *linha = no->dado.linha_original;
         
-        // Variáveis
         int codigo;
         char descricao[100];
 
-        // --- CASO 1: INSERT ---
+        // CASO 1: INSERT
         if (no->dado.operacao == INSERT) {
-            // Exemplo PDF: insert into tipo_pet(codigo, descricao) values(1, 'cachorro');
             
             char *ptr_values = strstr(linha, "values");
             
             if (ptr_values) {
                 memset(descricao, 0, 100);
-                
-                // Formato: values(int, 'string')
+
                 int lidos = sscanf(ptr_values, "values (%d, '%[^']')", &codigo, descricao);
 
-                // Tentativa sem espaços se falhar
                 if (lidos < 2) {
                      lidos = sscanf(ptr_values, "values(%d,'%[^']')", &codigo, descricao);
                 }
@@ -39,9 +35,8 @@ void executar_fila_tipos(filaComandos *f_tipos, struct tipo_de_pet** lista_tipo)
             }
         }
 
-        // --- CASO 2: DELETE ---
+        // CASO 2: DELETE
         else if (no->dado.operacao == DELETE) {
-            // Formato: delete from tipo_pet where codigo = 1;
             char *ptr_where = strstr(linha, "where");
             if (ptr_where) {
                 if (sscanf(ptr_where, "where codigo = %d", &codigo) == 1 || 
@@ -53,10 +48,8 @@ void executar_fila_tipos(filaComandos *f_tipos, struct tipo_de_pet** lista_tipo)
             }
         }
 
-        // --- CASO 3: SELECT ---
+        // CASO 3: SELECT
         else if (no->dado.operacao == SELECT) {
-            // PDF pede árvore binária no 'order by' [cite: 36]
-            // Aceita 'order by nome' (texto do pdf) ou 'order by descricao' (logica do campo)
             if (strstr(linha, "order by nome") || strstr(linha, "order by descricao")) {
                 printf(" -> Listando Tipos (Ordenado por Arvore Binaria)\n");
                 exibir_tipos_ordenado_por_nome(*lista_tipo);
@@ -74,15 +67,12 @@ void executar_fila_tipos(filaComandos *f_tipos, struct tipo_de_pet** lista_tipo)
             }
         }
 
-        // --- CASO 4: UPDATE ---
+        // CASO 4: UPDATE
         else if (no->dado.operacao == UPDATE) {
-            // Exemplo: update tipo_pet set descricao = 'Felino' where codigo = 2;
-            
             char *ptr_set = strstr(linha, "set");
             char *ptr_where = strstr(linha, "where");
 
             if (ptr_set && ptr_where) {
-                // 1. Ler ID
                 if (sscanf(ptr_where, "where codigo = %d", &codigo) != 1) {
                      if (sscanf(ptr_where, "where codigo=%d", &codigo) != 1) codigo = -1;
                 }
@@ -92,12 +82,11 @@ void executar_fila_tipos(filaComandos *f_tipos, struct tipo_de_pet** lista_tipo)
                     char temp_desc[100] = "";
                     char *loc;
 
-                    // 2. Parser da DESCRICAO (único campo alterável além do ID)
                     // O PDF chama de 'nome' na lista de variáveis mas 'descricao' no script.
                     // Vamos tentar ler ambos para garantir.
                     
                     loc = strstr(linha, "descricao");
-                    if (!loc) loc = strstr(linha, "nome"); // Fallback
+                    if (!loc) loc = strstr(linha, "nome");
 
                     if (loc && loc > ptr_set && loc < ptr_where) {
                         if (sscanf(loc, "descricao = '%[^']'", temp_desc) == 1 || 
@@ -108,7 +97,6 @@ void executar_fila_tipos(filaComandos *f_tipos, struct tipo_de_pet** lista_tipo)
                     }
 
                     printf(" -> Atualizando TipoPet Codigo: %d\n", codigo);
-                    // Só chama se realmente houve algo para alterar
                     if (p_desc != NULL) {
                         alterar_tipo_pet(*lista_tipo, codigo, p_desc);
                     } else {
