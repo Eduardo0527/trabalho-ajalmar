@@ -16,3 +16,12 @@ Abra o terminal na pasta raiz do projeto e execute o comando abaixo para compila
 
 ```bash
 gcc main.c pessoa.c pet.c tipo_pet.c arvore_pessoa.c arvore_pet.c arvore_tipo.c comando.c comando_pessoa.c comando_pet.c comando_tipo.c
+
+💻 Execução
+
+Após a compilação, o executável será gerado.
+
+No Windows, utilize:
+
+.\a
+(O nome do executável pode variar conforme o sistema ou configuração do compilador.)
