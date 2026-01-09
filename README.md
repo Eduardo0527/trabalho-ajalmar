@@ -25,4 +25,6 @@ Após a compilação, o executável será gerado.
 No Windows, utilize:
 
 .\a
+
+
 (O nome do executável pode variar conforme o sistema ou configuração do compilador.)
