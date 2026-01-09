@@ -56,3 +56,70 @@ int excluir_tipo_pet(struct tipo_de_pet** inicio, int codigo) {
     free(atual);
     return 1;
 }
+
+// --- FUNÇÃO DE ALTERAR (UPDATE) ---
+int alterar_tipo_pet(struct tipo_de_pet* inicio, int codigo, char* nova_descricao) {
+    // 1. Busca
+    struct tipo_de_pet* atual = buscar_tipo_pet(inicio, codigo); // Supondo que exista essa função
+
+    if (atual == NULL) {
+        printf("[ERRO] TipoPet %d nao encontrado.\n", codigo);
+        return 0;
+    }
+
+    // 2. Altera (apenas se não for nulo)
+    if (nova_descricao != NULL && strlen(nova_descricao) > 0) {
+        // Libera memória antiga se for alocação dinâmica
+        // free(atual->descricao); 
+        
+        // Se for string estática (char descricao[100]):
+        strcpy(atual->nome, nova_descricao);
+        
+        // Se for ponteiro (char* descricao):
+        // atual->descricao = strdup(nova_descricao);
+    }
+    
+    return 1;
+}
+
+// --- FUNÇÃO DE SALVAR (PERSISTÊNCIA) ---
+void salvar_tipos_pet_arquivo(struct tipo_de_pet* inicio, char* nome_arquivo) {
+    FILE* arq = fopen(nome_arquivo, "w");
+    if (arq == NULL) {
+        printf("[ERRO] Nao foi possivel salvar tipos em %s\n", nome_arquivo);
+        return;
+    }
+
+    struct tipo_de_pet* p = inicio;
+    while (p != NULL) {
+        // Formato: CODIGO;NOME
+        fprintf(arq, "%d;%s\n", p->codigo, p->nome);
+        p = p->prox;
+    }
+    fclose(arq);
+}
+
+void listar_tipo_pet(struct tipo_de_pet* inicio, int codigo) {
+    struct tipo_de_pet* atual = inicio;
+    while (atual != NULL && atual->codigo != codigo) {
+        atual = atual->prox;
+    }
+    if(atual == NULL){
+        printf("Não existe tipo de pet com o codigo: %d para ser exibida", codigo);
+    }else{
+        printf("ID: %-4d | Tipo: %s\n", atual->codigo, atual->nome);
+    }
+}
+
+// --- FUNÇÃO AUXILIAR DE LISTAGEM ---
+void listar_todos_tipos(struct tipo_de_pet* inicio) {
+    if (inicio == NULL) {
+        printf("Nenhum tipo cadastrado.\n");
+        return;
+    }
+    struct tipo_de_pet* p = inicio;
+    while (p != NULL) {
+        printf("ID: %-4d | Tipo: %s\n", p->codigo, p->nome);
+        p = p->prox;
+    }
+}

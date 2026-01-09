@@ -3,7 +3,7 @@
 #include <string.h>
 #include "tipo_pet.h"
 #include "pet.h"
-#include "comando_pessoa.h"
+#include "comando_tipo.h"
 
 void listar_tudo(Pessoa* l_pes, struct tipo_de_pet* l_tipos, struct pet* l_pets) {
     printf("\n--- PESSOAS ---\n");
@@ -32,7 +32,7 @@ int main() {
 
     carregar_pessoas_arquivo(&lista_pessoas, "pessoas.txt");
     carregar_tipos_pet_arquivo(&lista_tipos, "tipos.txt");
-    carregar_pets_arquivo(&lista_pets, "pets.txt");
+    carregar_pets_arquivo(&lista_pets, "pets.txt", lista_tipos);
     filaComandos f;
     filaComandos f_pessoa;
     filaComandos f_pet;
@@ -44,7 +44,13 @@ int main() {
     carregar_script("arquivo.txt", &f);
     processar_validacao_fila(&f);
     distribuir_comandos(&f,&f_pessoa,&f_pet,&f_tipo);
-    executar_fila_pessoas(&f_pessoa, &lista_pessoas);
+    executar_fila_pessoas(&f_pessoa, &lista_pessoas, &lista_pets);
+    executar_fila_tipos(&f_tipo, &lista_tipos);
+    executar_fila_pets(&f_pet, &lista_pets, lista_tipos);
+    salvar_pessoas_arquivo(lista_pessoas, "pessoas.txt");
+    salvar_pets_arquivo(lista_pets, "pets.txt");
+    salvar_tipos_pet_arquivo(lista_tipos, "tipos.txt");
+
     
     return 0;
 }

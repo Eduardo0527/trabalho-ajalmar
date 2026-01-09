@@ -1,2 +1,1 @@
-10;Cachorro
-20;Gato
+1;cachorro
